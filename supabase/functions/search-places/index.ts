@@ -100,9 +100,10 @@ serve(async (req) => {
         break; // No more pages
       }
 
-      // Small delay between pagination requests (Google recommends this)
-      if (page < 2) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+      // Google nextPageToken may take ~2s to become valid.
+      // If we request too fast, pagination can stop early (often around ~60 results).
+      if (pageToken) {
+        await new Promise((resolve) => setTimeout(resolve, 2200));
       }
     }
 
