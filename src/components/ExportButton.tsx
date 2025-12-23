@@ -19,13 +19,13 @@ export function ExportButton({ leads }: ExportButtonProps) {
       headers.join(","),
       ...leads.map((lead) =>
         [
-          `"${lead.name.replace(/"/g, '""')}"`,
+          `"${lead.businessName.replace(/"/g, '""')}"`,
           `"${lead.category}"`,
           lead.phone ? `"${lead.phone}"` : "",
           `"${lead.address.replace(/"/g, '""')}"`,
           lead.website || "",
           lead.rating || "",
-          lead.userRatingsTotal || "",
+          lead.reviewCount || "",
         ].join(",")
       ),
     ].join("\n");

@@ -9,34 +9,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { Lead, SearchQuery, IsraelCity } from "@/types/lead";
 import { toast } from "sonner";
 
-// Mock data for demonstration - replace with actual API integration
-const generateMockLeads = (keyword: string, city: string): Lead[] => {
-  const mockBusinesses = [
-    { name: "Elite", suffix: "Solutions", hasPhone: true },
-    { name: "Prime", suffix: "Services", hasPhone: true },
-    { name: "Golden", suffix: "Group", hasPhone: false },
-    { name: "First", suffix: "Partners", hasPhone: true },
-    { name: "Top", suffix: "Professionals", hasPhone: true },
-    { name: "Best", suffix: "Experts", hasPhone: false },
-    { name: "Premium", suffix: "Associates", hasPhone: true },
-    { name: "Superior", suffix: "Team", hasPhone: true },
-  ];
-
-  const streets = ["Rothschild Blvd", "Dizengoff St", "Ben Yehuda St", "King George St", "Allenby St", "Ibn Gabirol St"];
-
-  return mockBusinesses.map((business, index) => ({
-    id: `lead-${index}-${Date.now()}`,
-    name: `${business.name} ${keyword} ${business.suffix}`,
-    address: `${Math.floor(Math.random() * 200) + 1} ${streets[index % streets.length]}, ${city}, Israel`,
-    phone: business.hasPhone ? `+972-${Math.floor(Math.random() * 9) + 1}-${Math.floor(1000000 + Math.random() * 9000000)}` : null,
-    website: Math.random() > 0.3 ? `https://www.${business.name.toLowerCase()}${keyword.toLowerCase().replace(/\s/g, "")}.co.il` : null,
-    category: keyword,
-    rating: Math.round((3 + Math.random() * 2) * 10) / 10,
-    userRatingsTotal: Math.floor(Math.random() * 500) + 10,
-    placeId: `place_${index}_${Date.now()}`,
-  }));
-};
-
 export default function Index() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchQuery[]>([]);
@@ -48,11 +20,22 @@ export default function Index() {
     setHasSearched(true);
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-places`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ keyword, city }),
+      });
 
-      // In production, this would call the Google Places API via an edge function
-      const results = generateMockLeads(keyword, city);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch leads');
+      }
+
+      const data = await response.json();
+      const results: Lead[] = data.leads || [];
       setLeads(results);
 
       // Add to search history
@@ -64,8 +47,8 @@ export default function Index() {
       const leadsWithPhone = results.filter((l) => l.phone).length;
       toast.success(`Found ${results.length} leads (${leadsWithPhone} with phone numbers)`);
     } catch (error) {
-      toast.error("Failed to fetch leads. Please try again.");
       console.error("Search error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to fetch leads. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -112,14 +95,13 @@ export default function Index() {
         </section>
 
         {/* API Info Notice */}
-        <section className="bg-muted/50 rounded-xl p-6 border border-border/50">
+        <section className="bg-accent/10 rounded-xl p-6 border border-accent/20">
           <h3 className="font-display font-semibold text-foreground mb-2">
-            🔐 Google Places API Integration Required
+            ✅ Google Places API Connected
           </h3>
           <p className="text-sm text-muted-foreground">
-            This demo uses mock data. To fetch real business leads, connect your Google Cloud project 
-            with Places API (New) enabled. All data is retrieved legally through official Google APIs, 
-            ensuring compliance with terms of service.
+            Your app is connected to the Google Places API. Search for any business category in Israeli cities 
+            to retrieve real leads with phone numbers. All data is retrieved legally through official Google APIs.
           </p>
         </section>
       </main>

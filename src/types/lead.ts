@@ -1,13 +1,14 @@
 export interface Lead {
   id: string;
-  name: string;
+  businessName: string;
   address: string;
   phone: string | null;
   website: string | null;
   category: string;
   rating: number | null;
-  userRatingsTotal: number | null;
-  placeId: string;
+  reviewCount: number;
+  googleMapsUrl: string | null;
+  status: string;
 }
 
 export interface SearchQuery {
