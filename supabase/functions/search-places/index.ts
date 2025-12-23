@@ -43,45 +43,75 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Searching for "${keyword}" in "${city}, Israel"`);
+    console.log(`Searching for "${keyword}" in "${city}, Israel" - fetching up to 60 results in Hebrew`);
 
-    // Step 1: Text Search to find places
+    // Google Places API allows max 20 results per request
+    // We'll make up to 3 requests with pagination to get up to 60 results
     const textSearchUrl = 'https://places.googleapis.com/v1/places:searchText';
-    const textSearchBody = {
-      textQuery: `${keyword} in ${city}, Israel`,
-      languageCode: 'en',
-      regionCode: 'IL',
-      maxResultCount: 20,
-    };
+    const allPlaces: PlaceResult[] = [];
+    let pageToken: string | undefined = undefined;
 
-    const textSearchResponse = await fetch(textSearchUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus',
-      },
-      body: JSON.stringify(textSearchBody),
-    });
+    // Make up to 3 requests to get more results
+    for (let page = 0; page < 3; page++) {
+      const textSearchBody: Record<string, unknown> = {
+        textQuery: `${keyword} in ${city}, Israel`,
+        languageCode: 'he', // Hebrew language
+        regionCode: 'IL',
+        maxResultCount: 20,
+      };
 
-    if (!textSearchResponse.ok) {
-      const errorText = await textSearchResponse.text();
-      console.error('Google Places API error:', textSearchResponse.status, errorText);
-      return new Response(
-        JSON.stringify({ error: `Google Places API error: ${textSearchResponse.status}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Add page token for subsequent requests
+      if (pageToken) {
+        textSearchBody.pageToken = pageToken;
+      }
+
+      const textSearchResponse = await fetch(textSearchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken',
+        },
+        body: JSON.stringify(textSearchBody),
+      });
+
+      if (!textSearchResponse.ok) {
+        const errorText = await textSearchResponse.text();
+        console.error('Google Places API error:', textSearchResponse.status, errorText);
+        // If first page fails, return error. Otherwise, just stop pagination
+        if (page === 0) {
+          return new Response(
+            JSON.stringify({ error: `Google Places API error: ${textSearchResponse.status}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        break;
+      }
+
+      const textSearchData = await textSearchResponse.json();
+      const places: PlaceResult[] = textSearchData.places || [];
+      allPlaces.push(...places);
+      
+      console.log(`Page ${page + 1}: Found ${places.length} places (total: ${allPlaces.length})`);
+
+      // Check if there's a next page
+      pageToken = textSearchData.nextPageToken;
+      if (!pageToken) {
+        break; // No more pages
+      }
+
+      // Small delay between pagination requests (Google recommends this)
+      if (page < 2) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     }
 
-    const textSearchData = await textSearchResponse.json();
-    console.log(`Found ${textSearchData.places?.length || 0} places`);
-
-    const places: PlaceResult[] = textSearchData.places || [];
+    console.log(`Total places found: ${allPlaces.length}`);
 
     // Transform to our Lead format
-    const leads = places.map((place: PlaceResult, index: number) => ({
+    const leads = allPlaces.map((place: PlaceResult, index: number) => ({
       id: place.id || `lead-${index}`,
-      businessName: place.displayName?.text || 'Unknown Business',
+      businessName: place.displayName?.text || 'עסק לא ידוע',
       phone: place.nationalPhoneNumber || place.internationalPhoneNumber || null,
       address: place.formattedAddress || '',
       website: place.websiteUri || null,
