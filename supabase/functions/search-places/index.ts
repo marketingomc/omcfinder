@@ -43,16 +43,16 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Searching for "${keyword}" in "${city}, Israel" - fetching up to 60 results in Hebrew`);
+    console.log(`Searching for "${keyword}" in "${city}, Israel" - fetching up to 100 results in Hebrew`);
 
     // Google Places API allows max 20 results per request
-    // We'll make up to 3 requests with pagination to get up to 60 results
+    // We'll make up to 5 requests with pagination to get up to 100 results
     const textSearchUrl = 'https://places.googleapis.com/v1/places:searchText';
     const allPlaces: PlaceResult[] = [];
     let pageToken: string | undefined = undefined;
 
-    // Make up to 3 requests to get more results
-    for (let page = 0; page < 3; page++) {
+    // Make up to 5 requests to get more results
+    for (let page = 0; page < 5; page++) {
       const textSearchBody: Record<string, unknown> = {
         textQuery: `${keyword} in ${city}, Israel`,
         languageCode: 'he', // Hebrew language
