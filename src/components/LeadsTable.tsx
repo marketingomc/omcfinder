@@ -65,7 +65,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
               className="transition-colors hover:bg-accent/5"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <TableCell className="font-medium">{lead.name}</TableCell>
+              <TableCell className="font-medium">{lead.businessName}</TableCell>
               <TableCell>
                 <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
                   {lead.category}
@@ -105,9 +105,9 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                     <span className="font-medium">{lead.rating}</span>
-                    {lead.userRatingsTotal && (
+                    {lead.reviewCount > 0 && (
                       <span className="text-xs text-muted-foreground">
-                        ({lead.userRatingsTotal})
+                        ({lead.reviewCount})
                       </span>
                     )}
                   </div>
