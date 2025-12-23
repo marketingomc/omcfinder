@@ -1,9 +1,14 @@
 import { MapPin, Phone, Zap } from "lucide-react";
+import omcLogo from "@/assets/omc-logo.png";
 
 export function Header() {
   return (
     <header className="gradient-hero text-primary-foreground py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center">
+        <div className="flex justify-center mb-6 animate-fade-in">
+          <img src={omcLogo} alt="OMC Logo" className="h-16 sm:h-20" />
+        </div>
+        
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-6 animate-fade-in">
           <MapPin className="h-4 w-4" />
           <span className="text-sm font-medium">Israel Market Focus</span>
