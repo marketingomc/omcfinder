@@ -25,7 +25,7 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword, city } = await req.json();
+    const { keyword, city, country, countryCode } = await req.json();
     
     if (!keyword || !city) {
       return new Response(
@@ -43,7 +43,22 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Searching for "${keyword}" in "${city}, Israel" - fetching up to 100 results in Hebrew`);
+    const countryName = country || 'Israel';
+    const regionCode = countryCode || 'IL';
+    
+    // Determine language based on country
+    const languageMap: Record<string, string> = {
+      'IL': 'he',
+      'AE': 'en',
+      'MT': 'en',
+      'CY': 'el',
+      'GR': 'el',
+      'HU': 'hu',
+      'RO': 'ro',
+    };
+    const languageCode = languageMap[regionCode] || 'en';
+
+    console.log(`Searching for "${keyword}" in "${city}, ${countryName}" (region: ${regionCode}, lang: ${languageCode}) - fetching up to 100 results`);
 
     // Google Places API allows max 20 results per request
     // We'll make up to 5 requests with pagination to get up to 100 results
@@ -54,9 +69,9 @@ serve(async (req) => {
     // Make up to 5 requests to get more results
     for (let page = 0; page < 5; page++) {
       const textSearchBody: Record<string, unknown> = {
-        textQuery: `${keyword} in ${city}, Israel`,
-        languageCode: 'he', // Hebrew language
-        regionCode: 'IL',
+        textQuery: `${keyword} in ${city}, ${countryName}`,
+        languageCode: languageCode,
+        regionCode: regionCode,
         maxResultCount: 20,
       };
 
@@ -112,7 +127,7 @@ serve(async (req) => {
     // Transform to our Lead format
     const leads = allPlaces.map((place: PlaceResult, index: number) => ({
       id: place.id || `lead-${index}`,
-      businessName: place.displayName?.text || 'עסק לא ידוע',
+      businessName: place.displayName?.text || 'Unknown Business',
       phone: place.nationalPhoneNumber || place.internationalPhoneNumber || null,
       address: place.formattedAddress || '',
       website: place.websiteUri || null,

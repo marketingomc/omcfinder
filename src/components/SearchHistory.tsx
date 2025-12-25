@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface SearchHistoryProps {
   history: SearchQuery[];
-  onRerun: (keyword: string, city: string) => void;
+  onRerun: (keyword: string, city: string, country: string) => void;
 }
 
 export function SearchHistory({ history, onRerun }: SearchHistoryProps) {
@@ -22,11 +22,11 @@ export function SearchHistory({ history, onRerun }: SearchHistoryProps) {
             key={index}
             variant="secondary"
             size="sm"
-            onClick={() => onRerun(query.keyword, query.city)}
+            onClick={() => onRerun(query.keyword, query.city, query.country)}
             className="gap-1.5 text-sm"
           >
             <Search className="h-3 w-3" />
-            {query.keyword} • {query.city}
+            {query.keyword} • {query.city}, {query.country}
             <span className="text-muted-foreground">({query.resultsCount})</span>
           </Button>
         ))}

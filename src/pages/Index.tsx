@@ -6,7 +6,7 @@ import { StatsCards } from "@/components/StatsCards";
 import { ExportButton } from "@/components/ExportButton";
 import { SearchHistory } from "@/components/SearchHistory";
 import { EmptyState } from "@/components/EmptyState";
-import { Lead, SearchQuery, IsraelCity } from "@/types/lead";
+import { Lead, SearchQuery, Country, COUNTRY_CODES } from "@/types/lead";
 import { toast } from "sonner";
 
 export default function Index() {
@@ -15,18 +15,19 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = useCallback(async (keyword: string, city: IsraelCity) => {
+  const handleSearch = useCallback(async (keyword: string, city: string, country: Country) => {
     setIsLoading(true);
     setHasSearched(true);
 
     try {
+      const countryCode = COUNTRY_CODES[country];
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-places`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ keyword, city }),
+        body: JSON.stringify({ keyword, city, country, countryCode }),
       });
 
       if (!response.ok) {
@@ -40,8 +41,8 @@ export default function Index() {
 
       // Add to search history
       setSearchHistory((prev) => [
-        { keyword, city, timestamp: new Date(), resultsCount: results.length },
-        ...prev.filter((q) => !(q.keyword === keyword && q.city === city)).slice(0, 4),
+        { keyword, city, country, timestamp: new Date(), resultsCount: results.length },
+        ...prev.filter((q) => !(q.keyword === keyword && q.city === city && q.country === country)).slice(0, 4),
       ]);
 
       const leadsWithPhone = results.filter((l) => l.phone).length;
@@ -54,8 +55,8 @@ export default function Index() {
     }
   }, []);
 
-  const handleRerunSearch = useCallback((keyword: string, city: string) => {
-    handleSearch(keyword, city as IsraelCity);
+  const handleRerunSearch = useCallback((keyword: string, city: string, country: string) => {
+    handleSearch(keyword, city, country as Country);
   }, [handleSearch]);
 
   return (
@@ -100,7 +101,7 @@ export default function Index() {
             ✅ Google Places API Connected
           </h3>
           <p className="text-sm text-muted-foreground">
-            Your app is connected to the Google Places API. Search for any business category in Israeli cities 
+            Your app is connected to the Google Places API. Search for any business category across multiple countries 
             to retrieve real leads with phone numbers. All data is retrieved legally through official Google APIs.
           </p>
         </section>
@@ -108,7 +109,7 @@ export default function Index() {
 
       <footer className="border-t border-border/50 py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-muted-foreground">
-          <p>SDR Lead Finder – Israel • Powered by Google Places API</p>
+          <p>SDR Lead Finder • Powered by Google Places API</p>
         </div>
       </footer>
     </div>
