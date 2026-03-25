@@ -19,14 +19,11 @@ interface SearchFormProps {
 export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState<Country>("Israel");
-  const [city, setCity] = useState<string>("Tel Aviv");
+  const [city, setCity] = useState<string>("All Cities");
 
   // Update city when country changes
   useEffect(() => {
-    const cities = CITIES_BY_COUNTRY[country];
-    if (cities && cities.length > 0) {
-      setCity(cities[0]);
-    }
+    setCity("All Cities");
   }, [country]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,6 +72,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="All Cities">All Cities</SelectItem>
               {cities.map((cityName) => (
                 <SelectItem key={cityName} value={cityName}>
                   {cityName}
