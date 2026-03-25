@@ -19,7 +19,7 @@ interface SearchFormProps {
 export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState<Country>("Israel");
-  const [city, setCity] = useState<string>("Tel Aviv");
+  const [city, setCity] = useState<string>("All Cities");
 
   // Update city when country changes
   useEffect(() => {
