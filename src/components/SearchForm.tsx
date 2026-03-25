@@ -23,10 +23,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
 
   // Update city when country changes
   useEffect(() => {
-    const cities = CITIES_BY_COUNTRY[country];
-    if (cities && cities.length > 0) {
-      setCity(cities[0]);
-    }
+    setCity("All Cities");
   }, [country]);
 
   const handleSubmit = (e: React.FormEvent) => {
