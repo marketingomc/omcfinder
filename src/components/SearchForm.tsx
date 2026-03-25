@@ -72,6 +72,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="All Cities">All Cities</SelectItem>
               {cities.map((cityName) => (
                 <SelectItem key={cityName} value={cityName}>
                   {cityName}
